@@ -1,0 +1,75 @@
+
+{
+    "$schema": "https://raw.githubusercontent.com/LGUG2Z/komorebi/v0.1.30/schema.json",
+    "app_specific_configuration_path": "$Env:USERPROFILE/applications.json",
+    "window_hiding_behaviour": "Cloak",
+    "cross_monitor_move_behaviour": "Insert",
+    "default_workspace_padding": 0,
+    "default_container_padding": 0,
+    "border": true,
+    "border_width": 8,
+    "border_offset": -1,
+    "theme": {
+        "palette": "Base16",
+        "name": "Ashes",
+        "unfocused_border": "Base03",
+        "bar_accent": "Base0D"
+    },
+    // "transparency": true,
+    "transparency_alpha": 200,
+    "stackbar": {
+        "height": 40,
+        "mode": "OnStack",
+        // "mode": "Never",
+        "tabs": {
+            "width": 300
+        }
+    },
+    "monitors": [
+        {
+            "workspaces": [
+                {
+                    "name": "Main",
+                    "layout": "BSP"
+                    // "layout": "Grid"
+                    // "layout": "VerticalStack"
+                },
+                {
+                    "name": "Zetero",
+                    "layout": "BSP"
+                },
+                {
+                    "name": "Judge Girl",
+                    // "layout": "HorizontalStack"
+                    "layout": "BSP"
+                },
+                {
+                    "name": "IV",
+                    "layout": "BSP"
+                },
+                {
+                    "name": "V",
+                    "layout": "BSP"
+                },
+                {
+                    "name": "VI",
+                    "layout": "BSP"
+                },
+                {
+                    "name": "VII",
+                    "layout": "BSP"
+                }
+            ]
+        },
+        {
+            "workspaces": [
+                {
+                    "name": "Main2",
+                    "layout": "BSP"
+                    // "layout": "Grid"
+                    // "layout": "VerticalStack"
+                }
+            ]
+        }
+    ]
+}
