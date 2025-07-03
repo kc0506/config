@@ -4,7 +4,7 @@ using namespace System.Management.Automation.Language
 
 $PSDefaultParameterValues['Out-File:Encoding'] = 'utf8'
 
-oh-my-posh.exe init pwsh --config C:\Users\kchon\catppuccin.omp.json | Invoke-Expression
+oh-my-posh.exe init pwsh --config ~/oh-my-posh/catppuccin.omp.json | Invoke-Expression
 
 Set-PSReadLineOption -PredictionSource None
 Set-PSReadLineOption -HistorySearchCursorMovesToEnd
@@ -13,7 +13,8 @@ Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete
 Set-PSReadlineKeyHandler -Key UpArrow -Function HistorySearchBackward
 Set-PSReadlineKeyHandler -Key DownArrow -Function HistorySearchForward
 
-Import-Module posh-git
+# Import-Module posh-git
+Import-Module C:\Users\kc0506\scoop\apps\posh-git\1.1.0\posh-git.psm1
 
 # # $GitPromptSettings.EnableFileStatus = $false
 
@@ -359,3 +360,169 @@ Register-ArgumentCompleter -Native -CommandName 'just' -ScriptBlock {
     $completions.Where{ $_.CompletionText -like "$wordToComplete*" } |
         Sort-Object -Property ListItemText
 }
+
+
+function Move-LatestDownload {
+    param (
+        [string]$Destination = (Get-Location),
+        [switch]$Peek
+    )
+
+    $downloadsPath = Join-Path $HOME 'Downloads'
+    $latestFile = Get-ChildItem -Path $downloadsPath -File | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+
+    if (-not $latestFile) {
+        Write-Error "No files found in Downloads."
+        return
+    }
+
+    if (Test-Path $Destination -PathType Container) {
+        $targetPath = Join-Path $Destination $latestFile.Name
+    } else {
+        $targetPath = $Destination
+    }
+
+    if ($Peek) {
+        Write-Output "Latest file: $($latestFile.FullName)"
+        Write-Output "Would move to: $targetPath"
+        return
+    }
+
+    Move-Item -Path $latestFile.FullName -Destination $targetPath
+
+    "$($latestFile.FullName)|$targetPath" | Out-File "$env:USERPROFILE\.mvd_history" -Append
+    Write-Output "Moved '$($latestFile.Name)' to '$targetPath'"
+}
+
+Set-Alias mvd Move-LatestDownload
+
+
+function Undo-LastMvd {
+    $historyFile = "$env:USERPROFILE\.mvd_history"
+
+    if (-not (Test-Path $historyFile)) {
+        Write-Error "No move history found."
+        return
+    }
+
+    $lines = Get-Content $historyFile
+    # check if $lines is string, then make it an array
+    if ($lines -is [string]) {
+        $lines = @($lines)
+    }
+
+    if ($lines.Count -eq 0) {
+        Write-Error "No moves to undo."
+        return
+    }
+
+    $lastEntry = $lines[-1]
+
+    # Handle the case $lines.count == 1
+    echo 'lines.count: ' $lines.Count
+    if ($lines.Count -eq 1) {
+        Clear-Content $historyFile
+    } else {
+        $remainingEntries = $lines[0..($lines.Count - 2)]
+        $remainingEntries | Set-Content $historyFile
+    }
+    # echo 'remainingEntries: ' $remainingEntries
+
+    $parts = $lastEntry -split '\|'
+    $original = $parts[0]
+    $movedTo = $parts[1]
+
+    # echo $parts
+    # echo $original
+    # echo $movedTo
+    # echo $lines.count
+    # echo $remainingEntries
+    # return
+
+    if (-not (Test-Path $movedTo)) {
+        Write-Error "File no longer exists at destination: $movedTo"
+        return
+    }
+
+    Move-Item -Path $movedTo -Destination $original
+    Write-Output "Moved '$movedTo' back to '$original'"
+}
+
+Set-Alias umvd Undo-LastMvd
+
+function Invoke-Shadcn {
+	    npx shadcn@latest @Args
+}
+Set-Alias shadcn Invoke-Shadcn
+
+Invoke-Expression (& { (zoxide init powershell --cmd cd | Out-String) })
+
+
+
+function Record-AppInstall {
+    param (
+        [Parameter(Mandatory=$true)]
+        [string]$AppName,
+        [string]$Notes = ""
+    )
+
+    $historyFile = "$env:USERPROFILE\.installed_apps"
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $entry = "$AppName|$timestamp|$Notes"
+    
+    $entry | Out-File $historyFile -Append
+    Write-Output "Recorded installation of '$AppName' at $timestamp"
+    if ($Notes) {
+        Write-Output "Notes: $Notes"
+    }
+}
+
+Set-Alias rai Record-AppInstall
+
+function List-InstalledApps {
+    param (
+        [switch]$SortByName,
+        [switch]$Reverse
+    )
+
+    $historyFile = "$env:USERPROFILE\.installed_apps"
+
+    if (-not (Test-Path $historyFile)) {
+        Write-Output "No installed apps recorded yet."
+        return
+    }
+
+    $entries = Get-Content $historyFile
+
+    if ($entries.Count -eq 0) {
+        Write-Output "No installed apps recorded yet."
+        return
+    }
+
+    $apps = @()
+    foreach ($entry in $entries) {
+        $parts = $entry -split '\|'
+        if ($parts.Count -ge 2) {
+            $notes = if ($parts.Count -ge 3) { $parts[2] } else { "" }
+            $apps += [PSCustomObject]@{
+                Name = $parts[0]
+                InstalledAt = $parts[1]
+                Notes = $notes
+            }
+        }
+    }
+
+    if ($SortByName) {
+        $apps = $apps | Sort-Object Name
+    } else {
+        $apps = $apps | Sort-Object InstalledAt
+    }
+
+    if ($Reverse) {
+        $apps = $apps | Sort-Object -Descending
+    }
+
+    $apps | Format-Table -AutoSize
+}
+
+Set-Alias lai List-InstalledApps 
