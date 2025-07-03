@@ -1,0 +1,31 @@
+---
+description: 
+globs: *.py,*.ipynb
+alwaysApply: false
+---
+Strictly follow the rules here when writing Python.
+
+# Version
+- By default, assume the 3.12 version. This means that you can use the newest Python syntax and features, such as pattern matching.
+
+# Coding style
+- Do not care too much about formatting; it will be handled by ruff. 
+- Avoid lambda function when it becomes too complex. 
+
+# Typing
+- Use `from __future__ import annotations` by default.
+- Always type the function arguments.
+- Type other variables and function returns only when necessary.
+- Use the newer syntax, including:
+    - Use the builtin container (e.g. `list[int]`) over typing (e.g. `typing.List[int]`). Please note that `Callable` is an exception.
+    - Use `|` over `Union`
+    - Use `<type> | None` over `Optional[<type>]`.
+    - Use type statement over `TypeAlias`
+    - Use type argument (i.e. `[T, *S, **P]`) over `TypeVar`
+- You might still have to import some types from `typing`, for example `Literal, Concatenate`.
+
+# Builtin libraries
+- Always use `pathlib` over `os.path` when possible.
+
+# Common libraries
+- We use pydantic by default.
